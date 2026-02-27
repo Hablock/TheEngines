@@ -449,7 +449,7 @@ function refreshUI(nowTs = performance.now()){
 
   engines.forEach(engine=>{
     const els=engineEls[engine.id];
-    els.titleEl.textContent=`⚙️🛠️ ${engine.rowIndex + 1}.${engine.colIndex + 1}`;
+    els.titleEl.textContent=`⚙️ ${engine.rowIndex + 1}.${engine.colIndex + 1}`;
     els.levelEl.textContent=`Lv ${engine.level}`;
 
     // Keep current behavior for main button content (not part of header)
