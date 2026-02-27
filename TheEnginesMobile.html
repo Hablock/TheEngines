@@ -96,7 +96,7 @@
     .tree-line.hl-yellow{stroke:var(--yellow) !important;stroke-width:3 !important;opacity:0.98}
     .tree-line.hl-red{stroke:var(--red) !important;stroke-width:3 !important;opacity:0.98}
 
-    .engine-title h3{margin:0;font-size:11px;color:var(--muted);font-weight:700;line-height:1.2}
+    .engine-title h3{margin:0;font-size:10px;color:var(--muted);font-weight:700;line-height:1.2}
     .level-row{font-size:12px;font-weight:800;color:var(--text)}
 
     button{
@@ -430,7 +430,7 @@ function refreshUI(nowTs = performance.now()){
 
   engines.forEach(engine=>{
     const els=engineEls[engine.id];
-    els.titleEl.textContent=`${ROWS[engine.rowIndex].label} - Engine ${engine.colIndex+1}`;
+    els.titleEl.textContent=`Engine ${engine.rowIndex + 1}.${engine.colIndex + 1}`;
     els.levelEl.textContent=`Level ${engine.level}`;
 
     // Keep current behavior for main button content (not part of header)
