@@ -56,6 +56,7 @@
     }
     .label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.25px}
     .value{font-size:clamp(16px,4.6vw,22px);font-weight:800;margin-top:4px}
+    .time-unit{font-size:0.6em;color:var(--muted);font-weight:700}
 
     .target-text{position:static;margin-top:3px;font-size:9px;color:var(--muted);font-weight:600}
     .time-final{color:var(--green);}
@@ -161,7 +162,15 @@
     .running-pill.on{color:var(--green);border-color:rgba(35,209,139,0.35)}
     .running-pill.off{color:var(--red);border-color:rgba(255,77,77,0.35)}
 
-    .start{background:rgba(35,209,139,0.9);border-color:rgba(35,209,139,1);color:#0b1a12;font-weight:900;min-width:114px}
+    .start{
+      background:rgba(35,209,139,0.9);
+      border-color:rgba(35,209,139,1);
+      color:#0b1a12;
+      font-weight:900;
+      min-width:114px;
+      min-height:38px;
+      padding:6px 10px;
+    }
     .start:hover{background:rgba(35,209,139,1)}
     .start.running{background:rgba(35,209,139,0.35);border-color:rgba(35,209,139,0.6);color:var(--text)}
     .start:hover{background:rgba(35,209,139,0.14)}
@@ -184,12 +193,12 @@
       <div class="progress-wrap" aria-hidden="true"><div class="progress-bar" id="powerProgress"></div></div>
     </div>
     <div class="stat">
-      <div class="label">Power gain / second</div>
+      <div class="label">Power / second</div>
       <div class="value" id="ppsValue">0</div>
     </div>
     <div class="stat" id="timeStat">
       <div class="label">Time spent</div>
-      <div class="value" id="timeValue">0 min 0.0 s</div>
+      <div class="value" id="timeValue"><span id="timeMinValue">0</span> <span class="time-unit">min</span> <span id="timeSecValue">0.0</span> <span class="time-unit">s</span></div>
       <div class="time-finished" id="finishedBadge" style="display:none;">Finished!</div>
     </div>
   </header>
@@ -275,6 +284,8 @@ const startBtn = document.getElementById("startBtn");
 const powerValueEl = document.getElementById("powerValue");
 const ppsValueEl = document.getElementById("ppsValue");
 const timeValueEl = document.getElementById("timeValue");
+const timeMinValueEl = document.getElementById("timeMinValue");
+const timeSecValueEl = document.getElementById("timeSecValue");
 const finishedBadgeEl = document.getElementById("finishedBadge");
 const progressEl = document.getElementById("powerProgress");
 
@@ -423,7 +434,13 @@ function refreshUI(nowTs = performance.now()){
   ppsValueEl.textContent = gameStarted ? formatInt(totalPPS()) : "0";
 
   const elapsedMs = getElapsedMs(nowTs);
-  timeValueEl.textContent = formatElapsed(elapsedMs);
+  const totalSeconds = elapsedMs / 1000;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds - minutes * 60;
+  const secInt = Math.floor(seconds);
+  const tenths = Math.floor((seconds - secInt) * 10);
+  timeMinValueEl.textContent = `${minutes}`;
+  timeSecValueEl.textContent = `${secInt}.${tenths}`;
   timeValueEl.classList.toggle("time-final", finished);
 
   finishedBadgeEl.style.display = finished ? "block" : "none";
