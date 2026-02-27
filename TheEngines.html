@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Idle Clicker Tech Tree Prototype</title>
+  <style>
+    :root {
+      --bg:#0f1115;
+      --panel:#161a22;
+      --panel2:#10131a;
+      --text:#e7eaf0;
+      --muted:#aab3c5;
+      --border:rgba(255,255,255,0.10);
+
+      --green:#23d18b;
+      --yellow:#ffd400;
+      --red:#ff4d4d;
+    }
+
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(1200px 700px at 30% 10%,#1a2140 0%,var(--bg) 55%);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+
+    header{display:flex;gap:12px;flex-wrap:wrap}
+    .stat{flex:1 1 260px;background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);border:1px solid var(--border);border-radius:14px;padding:14px 16px;min-height:72px}
+    .label{font-size:12px;color:var(--muted);text-transform:uppercase}
+    .value{font-size:26px;font-weight:700;margin-top:6px}
+
+    .tree-wrap{position:relative;margin-top:16px}
+    .tree-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+    .grid{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));column-gap:12px;row-gap:26px;position:relative;z-index:1}
+    @media (max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(160px,1fr));}}
+    @media (max-width:520px){.grid{grid-template-columns:1fr;}}
+
+    .engine{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));border:1px solid var(--border);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:140px}
+
+    .engine.hl-green{border-color:var(--green);box-shadow:0 0 0 2px rgba(35,209,139,0.25),0 0 18px rgba(35,209,139,0.14)}
+    .engine.hl-yellow{border-color:var(--yellow);box-shadow:0 0 0 2px rgba(255,212,0,0.22),0 0 18px rgba(255,212,0,0.12)}
+    .engine.hl-red{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,77,77,0.22),0 0 18px rgba(255,77,77,0.12)}
+
+    .tree-line{transition:stroke 120ms ease,stroke-width 120ms ease,opacity 120ms ease;opacity:0.85}
+    .tree-line.hl-green{stroke:var(--green) !important;stroke-width:3 !important;opacity:0.98}
+    .tree-line.hl-yellow{stroke:var(--yellow) !important;stroke-width:3 !important;opacity:0.98}
+    .tree-line.hl-red{stroke:var(--red) !important;stroke-width:3 !important;opacity:0.98}
+
+    .engine-title h3{margin:0;font-size:15px;color:var(--muted);font-weight:600}
+    .level-row{font-size:14px;font-weight:800;color:var(--text)}
+
+    button{cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);border-radius:12px;padding:10px 12px;font-weight:700;transition:transform 80ms ease,background 120ms ease,opacity 120ms ease,border-color 120ms ease;user-select:none}
+    button:active{transform:translateY(1px) scale(0.99)}
+    button:hover{background:rgba(255,255,255,0.06)}
+    button:disabled{cursor:not-allowed;opacity:.65}
+
+    .primary{background:rgba(122,162,255,0.12);border-color:rgba(122,162,255,0.35)}
+    .primary:hover{background:rgba(122,162,255,0.16)}
+
+    .sub{font-size:12px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-label{font-weight:800}
+    .cost{font-weight:700;color:rgba(231,234,240,0.72);font-size:12px}
+
+    .state-green{border-color:rgba(35,209,139,0.65);background:rgba(35,209,139,0.10)}
+    .state-yellow{border-color:rgba(255,212,0,0.60);background:rgba(255,212,0,0.08)}
+    .state-red{border-color:rgba(255,77,77,0.60);background:rgba(255,77,77,0.08)}
+
+    .footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap}
+    .stop{background:rgba(255,77,77,0.10);border-color:rgba(255,77,77,0.35)}
+
+    .running-pill{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--muted)}
+    .running-pill.on{color:var(--green);border-color:rgba(35,209,139,0.35)}
+    .running-pill.off{color:var(--red);border-color:rgba(255,77,77,0.35)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="stat"><div class="label">Current power</div><div class="value" id="powerValue">0</div></div>
+    <div class="stat"><div class="label">Power gain / second</div><div class="value" id="ppsValue">0</div></div>
+  </header>
+
+  <div class="tree-wrap" id="treeWrap">
+    <svg class="tree-lines" id="treeLines" aria-hidden="true"></svg>
+    <section class="grid" id="engineGrid"></section>
+  </div>
+
+  <div class="footer">
+    <button class="stop" id="stopBtn">Stop</button>
+    <div class="running-pill on" id="runningPill">Running</div>
+  </div>
+</div>
+
+<script>
+let power = 0;
+let running = true;
+
+const ENGINES_PER_ROW = 5;
+const ROWS = [
+  { label: "Row 1", costOffset: 0, rewardOffset: 0 },
+  { label: "Row 2", costOffset: 10, rewardOffset: 10 },
+  { label: "Row 3", costOffset: 100, rewardOffset: 100 },
+];
+
+const CLICK_GAIN_BASE = 1;
+const AUTOMATE_COST_BASE = 20;
+const FIRST_UPGRADE_COST_BASE = 30;
+const UPGRADE_COST_STEP_BASE = 10;
+
+const engines = ROWS.flatMap((row, rowIndex) =>
+  Array.from({ length: ENGINES_PER_ROW }, (_, colIndex) => ({
+    id: rowIndex * ENGINES_PER_ROW + colIndex,
+    rowIndex,
+    colIndex,
+    automated: false,
+    rate: 0,
+    upgradesBought: 0,
+    level: 1,
+  }))
+);
+
+const parentsById = {};
+const childrenById = {};
+
+function randInt(maxExclusive) { return Math.floor(Math.random() * maxExclusive); }
+function pickTwoDistinct(indices) {
+  const a = indices[randInt(indices.length)];
+  let b = indices[randInt(indices.length)];
+  while (b === a) b = indices[randInt(indices.length)];
+  return [a, b];
+}
+
+function initConnections() {
+  for (const k of Object.keys(parentsById)) delete parentsById[k];
+  for (const k of Object.keys(childrenById)) delete childrenById[k];
+
+  const row1Ids = engines.filter(e => e.rowIndex === 0).map(e => e.id);
+  const row2 = engines.filter(e => e.rowIndex === 1);
+  row2.forEach(child => { parentsById[child.id] = pickTwoDistinct(row1Ids); });
+
+  const row2Ids = engines.filter(e => e.rowIndex === 1).map(e => e.id);
+  const row3 = engines.filter(e => e.rowIndex === 2);
+  row3.forEach(child => { parentsById[child.id] = pickTwoDistinct(row2Ids); });
+
+  Object.keys(parentsById).forEach(cid => {
+    parentsById[cid].forEach(pid => {
+      if (!childrenById[pid]) childrenById[pid] = [];
+      childrenById[pid].push(Number(cid));
+    });
+  });
+}
+
+const powerValueEl = document.getElementById("powerValue");
+const ppsValueEl = document.getElementById("ppsValue");
+const gridEl = document.getElementById("engineGrid");
+const treeWrapEl = document.getElementById("treeWrap");
+const treeSvgEl = document.getElementById("treeLines");
+const stopBtn = document.getElementById("stopBtn");
+const runningPill = document.getElementById("runningPill");
+
+function format(n){ return Math.floor(n).toString(); }
+function gain(a){ power += a; }
+function spend(c){ power = Math.max(0, power - c); }
+function canAfford(c){ return power >= c; }
+function canManualClick(e){ return e.rowIndex === 0; }
+function clickGainFor(e){ return canManualClick(e) ? CLICK_GAIN_BASE + ROWS[e.rowIndex].rewardOffset : 0; }
+function automateCostFor(e){ if(e.rowIndex===1) return 200; if(e.rowIndex===2) return 2000; return AUTOMATE_COST_BASE + ROWS[e.rowIndex].costOffset; }
+function upgradeCostFor(e){ if(e.rowIndex===1) return 200 + (e.upgradesBought+1)*100; if(e.rowIndex===2) return 2000 + (e.upgradesBought+1)*1000; return FIRST_UPGRADE_COST_BASE + ROWS[e.rowIndex].costOffset + e.upgradesBought*(UPGRADE_COST_STEP_BASE + ROWS[e.rowIndex].costOffset); }
+function initialRateFor(e){ return 1 + ROWS[e.rowIndex].rewardOffset; }
+function upgradeDeltaFor(e){ return 1 + ROWS[e.rowIndex].rewardOffset; }
+function totalPPS(){ return engines.reduce((s,e)=>s+(e.automated?e.rate:0),0); }
+function getParents(e){ return (parentsById[e.id]||[]).map(pid=>engines[pid]); }
+function minParentLevel(e){ const p=getParents(e); return p.length?Math.min(...p.map(x=>x.level)):Infinity; }
+function parentsAllowNextLevel(e){ const p=getParents(e); if(!p.length) return true; return minParentLevel(e)>=e.level+1; }
+
+function actionStatus(e){
+  const cost = e.automated?upgradeCostFor(e):automateCostFor(e);
+  const condPower = canAfford(cost);
+  const condParents = parentsAllowNextLevel(e);
+  if(condPower && condParents) return "green";
+  if(condPower || condParents) return "yellow";
+  return "red";
+}
+
+function canPerformAction(e){ return running && actionStatus(e)==="green"; }
+
+function ancestorsOf(id){ const s=new Set(),stack=[id]; while(stack.length){const c=stack.pop();(parentsById[c]||[]).forEach(p=>{if(!s.has(p)){s.add(p);stack.push(p);}});} return s; }
+function descendantsOf(id){ const s=new Set(),stack=[id]; while(stack.length){const c=stack.pop();(childrenById[c]||[]).forEach(ch=>{if(!s.has(ch)){s.add(ch);stack.push(ch);}});} return s; }
+function highlightSetFor(id){ const set=new Set([id]); ancestorsOf(id).forEach(x=>set.add(x)); descendantsOf(id).forEach(x=>set.add(x)); return set; }
+
+let highlightedIds=new Set();
+let highlightedColor=null;
+let allLineEls=[];
+
+function clearHighlight(){
+  highlightedIds.forEach(id=>engineEls[id]?.cardEl.classList.remove("hl-green","hl-yellow","hl-red"));
+  allLineEls.forEach(l=>l.classList.remove("hl-green","hl-yellow","hl-red"));
+  highlightedIds=new Set(); highlightedColor=null;
+}
+
+function applyHighlight(id){
+  const set=highlightSetFor(id);
+  const color=actionStatus(engines[id]);
+  engines.forEach(e=>{
+    const card=engineEls[e.id].cardEl;
+    card.classList.remove("hl-green","hl-yellow","hl-red");
+    if(set.has(e.id)) card.classList.add(`hl-${color}`);
+  });
+  allLineEls.forEach(l=>{
+    l.classList.remove("hl-green","hl-yellow","hl-red");
+    const p=Number(l.dataset.parentId),c=Number(l.dataset.childId);
+    if(set.has(p)&&set.has(c)) l.classList.add(`hl-${color}`);
+  });
+  highlightedIds=set; highlightedColor=color;
+}
+
+const engineEls=engines.map(()=>({levelEl:null,mainBtn:null,actionBtn:null,labelEl:null,costEl:null,titleEl:null,cardEl:null}));
+
+function buildUI(){
+  gridEl.innerHTML="";
+  engines.forEach(engine=>{
+    const card=document.createElement("div"); card.className="engine";
+    card.addEventListener("pointerenter",()=>applyHighlight(engine.id));
+    card.addEventListener("pointerleave",clearHighlight);
+
+    const title=document.createElement("h3");
+    const levelRow=document.createElement("div"); levelRow.className="level-row";
+
+    const mainBtn=document.createElement("button"); mainBtn.className="primary";
+    mainBtn.addEventListener("pointerdown",ev=>{
+      ev.preventDefault(); if(!running||!canManualClick(engine)) return;
+      const g=clickGainFor(engine); if(g>0){ gain(g); powerValueEl.textContent=format(power); }
+    });
+
+    const actionBtn=document.createElement("button"); actionBtn.className="sub";
+    const labelEl=document.createElement("span"); labelEl.className="btn-label";
+    const costEl=document.createElement("span"); costEl.className="cost";
+    actionBtn.appendChild(labelEl); actionBtn.appendChild(costEl);
+
+    actionBtn.addEventListener("pointerdown",ev=>{
+      ev.preventDefault(); if(!canPerformAction(engine)) return;
+      if(!engine.automated){ spend(automateCostFor(engine)); engine.automated=true; engine.rate=initialRateFor(engine); engine.level++; }
+      else{ spend(upgradeCostFor(engine)); engine.upgradesBought++; engine.rate+=upgradeDeltaFor(engine); engine.level++; }
+      refreshUI();
+      // Layout can change slightly (text width), update lines once.
+      scheduleUpdateLinePositions();
+      if (highlightedIds.has(engine.id)) applyHighlight(engine.id);
+    });
+
+    card.appendChild(title);
+    card.appendChild(levelRow);
+    card.appendChild(mainBtn);
+    card.appendChild(actionBtn);
+    gridEl.appendChild(card);
+
+    engineEls[engine.id]={levelEl:levelRow,mainBtn,actionBtn,labelEl,costEl,titleEl:title,cardEl:card};
+  });
+}
+
+function refreshUI(){
+  powerValueEl.textContent=format(power);
+  ppsValueEl.textContent=format(totalPPS());
+
+  engines.forEach(engine=>{
+    const els=engineEls[engine.id];
+    els.titleEl.textContent=`${ROWS[engine.rowIndex].label} - Engine ${engine.colIndex+1}`;
+    els.levelEl.textContent=`Level ${engine.level}`;
+
+    els.mainBtn.textContent=engine.automated
+      ? `${engine.rate}/s`
+      : (canManualClick(engine)?`Click: +${clickGainFor(engine)} power`:"Waiting for activation");
+    els.mainBtn.disabled=!running||!canManualClick(engine);
+
+    const label=engine.automated?"Upgrade":"Automate";
+    const cost=engine.automated?upgradeCostFor(engine):automateCostFor(engine);
+    els.labelEl.textContent=label;
+    els.costEl.textContent=`Cost: ${cost}`;
+
+    els.actionBtn.classList.remove("state-green","state-yellow","state-red");
+    const st=actionStatus(engine);
+    els.actionBtn.classList.add(`state-${st}`);
+    els.actionBtn.disabled=!running||st!=="green";
+  });
+
+  runningPill.textContent=running?"Running":"Stopped";
+  runningPill.classList.toggle("on",running);
+  runningPill.classList.toggle("off",!running);
+  stopBtn.textContent=running?"Stop":"Stopped";
+  stopBtn.disabled=!running;
+}
+
+// --- Tech tree line rendering (no DOM churn) ---
+let edges = []; // {p, c}
+let lineByKey = new Map(); // "p->c" => SVGLineElement
+let updateLinesQueued = false;
+let lastWrapSize = { w: 0, h: 0 };
+
+function buildLines() {
+  // Build edge list once (connections are fixed for the session)
+  edges = [];
+  engines.forEach((child) => {
+    (parentsById[child.id] || []).forEach((pid) => edges.push({ p: pid, c: child.id }));
+  });
+
+  // Create missing line elements
+  edges.forEach(({ p, c }) => {
+    const key = `${p}->${c}`;
+    if (lineByKey.has(key)) return;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.classList.add("tree-line");
+    line.dataset.parentId = String(p);
+    line.dataset.childId = String(c);
+    line.setAttribute("stroke", "rgba(122,162,255,0.45)");
+    line.setAttribute("stroke-width", "2");
+    line.setAttribute("stroke-linecap", "round");
+    treeSvgEl.appendChild(line);
+    lineByKey.set(key, line);
+  });
+
+  // Remove any stale lines
+  for (const [key, el] of lineByKey.entries()) {
+    if (!edges.some(({ p, c }) => key === `${p}->${c}`)) {
+      el.remove();
+      lineByKey.delete(key);
+    }
+  }
+
+  allLineEls = Array.from(lineByKey.values());
+}
+
+function updateLinePositions() {
+  const wrapRect = treeWrapEl.getBoundingClientRect();
+  const w = wrapRect.width;
+  const h = wrapRect.height;
+
+  // Keep SVG sized to the wrapper.
+  treeSvgEl.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+  edges.forEach(({ p, c }) => {
+    const pRect = engineEls[p].cardEl.getBoundingClientRect();
+    const cRect = engineEls[c].cardEl.getBoundingClientRect();
+
+    const x1 = (pRect.left - wrapRect.left) + pRect.width / 2;
+    const y1 = (pRect.top - wrapRect.top) + pRect.height;
+    const x2 = (cRect.left - wrapRect.left) + cRect.width / 2;
+    const y2 = (cRect.top - wrapRect.top);
+
+    const key = `${p}->${c}`;
+    const line = lineByKey.get(key);
+    if (!line) return;
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+  });
+
+  // Reapply highlight without clearing (prevents flicker)
+  if (highlightedIds.size && highlightedColor) {
+    allLineEls.forEach((l) => {
+      const p = Number(l.dataset.parentId);
+      const c = Number(l.dataset.childId);
+      l.classList.toggle(`hl-${highlightedColor}`, highlightedIds.has(p) && highlightedIds.has(c));
+    });
+  }
+}
+
+function scheduleUpdateLinePositions() {
+  if (updateLinesQueued) return;
+  updateLinesQueued = true;
+  requestAnimationFrame(() => {
+    updateLinesQueued = false;
+    updateLinePositions();
+  });
+}
+
+stopBtn.addEventListener("pointerdown",e=>{e.preventDefault(); running=false; refreshUI();});
+window.addEventListener("resize", scheduleUpdateLinePositions);
+
+let lastTs=performance.now(),lastUiTs=0;
+function tick(ts){
+  const dt=(ts-lastTs)/1000; lastTs=ts;
+  if(running){ const pps=totalPPS(); if(pps>0) gain(pps*dt); }
+  if(ts-lastUiTs>50){ refreshUI(); lastUiTs=ts; }
+  else{ powerValueEl.textContent=format(power); ppsValueEl.textContent=format(totalPPS()); }
+  requestAnimationFrame(tick);
+}
+
+initConnections();
+buildUI();
+refreshUI();
+buildLines();
+scheduleUpdateLinePositions();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
