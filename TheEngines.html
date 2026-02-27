@@ -127,11 +127,7 @@
     <section class="grid" id="engineGrid"></section>
   </div>
 
-  <div class="footer">
-    <button class="stop" id="stopBtn">Stop</button>
-    <div class="running-pill off" id="runningPill">Not started</div>
   </div>
-</div>
 
 <script>
 // --- Game state ---
@@ -201,8 +197,8 @@ function initConnections() {
 
 // DOM
 const startBtn = document.getElementById("startBtn");
-const stopBtn = document.getElementById("stopBtn");
-const runningPill = document.getElementById("runningPill");
+// Stop button removed
+// Running pill removed
 
 const powerValueEl = document.getElementById("powerValue");
 const ppsValueEl = document.getElementById("ppsValue");
@@ -398,7 +394,7 @@ function refreshUI(nowTs = performance.now()){
     els.actionBtn.disabled = !gameStarted || !running || finished || st!=="green";
   });
 
-  // Start/stop UI
+  // Start button UI
   startBtn.disabled = false;
   if(!gameStarted){
     startBtn.textContent = "Start";
@@ -410,23 +406,6 @@ function refreshUI(nowTs = performance.now()){
     startBtn.textContent = "Running";
     startBtn.classList.add("running");
   }
-  stopBtn.disabled = !gameStarted || !running || finished;
-
-  if(!gameStarted){
-    runningPill.textContent = "Not started";
-    runningPill.classList.remove("on");
-    runningPill.classList.add("off");
-  } else if(finished){
-    runningPill.textContent = "Finished";
-    runningPill.classList.remove("on");
-    runningPill.classList.add("off");
-  } else {
-    runningPill.textContent = running ? "Running" : "Stopped";
-    runningPill.classList.toggle("on", running);
-    runningPill.classList.toggle("off", !running);
-  }
-
-  stopBtn.textContent = finished ? "Stopped" : (running ? "Stop" : "Stopped");
 }
 
 function checkWin(){
@@ -573,12 +552,7 @@ startBtn.addEventListener("pointerdown", (ev) => {
   }
 });
 
-stopBtn.addEventListener("pointerdown", (ev) => {
-  ev.preventDefault();
-  if (!gameStarted || finished) return;
-  running = false;
-  refreshUI(performance.now());
-});
+
 
 window.addEventListener("resize", scheduleUpdateLinePositions);
 
