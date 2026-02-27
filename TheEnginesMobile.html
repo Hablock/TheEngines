@@ -135,6 +135,15 @@
       cursor:default;
     }
     .passive:hover{background:transparent;}
+    .display-only{
+      background:rgba(255,255,255,0.10);
+      border:none;
+      border-radius:0;
+      color:rgba(231,234,240,0.85);
+      cursor:default;
+    }
+    .display-only:hover{background:rgba(255,255,255,0.10)}
+    .display-only:active{transform:none}
     .primary:hover{background:rgba(122,162,255,0.16)}
 
     .sub{
@@ -451,24 +460,18 @@ function refreshUI(nowTs = performance.now()){
     const els=engineEls[engine.id];
     els.titleEl.textContent=`⚙️ ${engine.rowIndex + 1}.${engine.colIndex + 1}`;
     els.levelEl.textContent=`Lv ${engine.level}`;
+    els.mainBtn.classList.remove("passive","display-only");
 
     // Keep current behavior for main button content (not part of header)
-    if(engine.automated){
-      els.mainBtn.classList.remove("passive");
-      if(engine.rowIndex === 0){
-        els.mainBtn.textContent = `Click + ${engine.rate}/s`;
-      } else {
-        els.mainBtn.textContent = `${engine.rate}/s`;
-      }
+    if(engine.rowIndex > 0){
+      els.mainBtn.classList.add("display-only");
+      els.mainBtn.textContent = engine.automated ? `${engine.rate}/s` : "Waiting";
+    } else if(engine.automated){
+      els.mainBtn.textContent = `Click + ${engine.rate}/s`;
     } else if(!gameStarted){
-      els.mainBtn.classList.remove("passive");
       els.mainBtn.textContent = "Waiting";
-    } else if(engine.rowIndex === 0){
-      els.mainBtn.classList.remove("passive");
-      els.mainBtn.textContent = "Click";
     } else {
-      els.mainBtn.classList.add("passive");
-      els.mainBtn.textContent = "Waiting for Activation";
+      els.mainBtn.textContent = "Click";
     }
     els.mainBtn.disabled = !gameStarted || !running || finished || !canManualClick(engine);
 
