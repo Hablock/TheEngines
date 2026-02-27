@@ -96,19 +96,14 @@
     .tree-line.hl-yellow{stroke:var(--yellow) !important;stroke-width:3 !important;opacity:0.98}
     .tree-line.hl-red{stroke:var(--red) !important;stroke-width:3 !important;opacity:0.98}
 
-    .engine-head{display:flex;align-items:center;justify-content:space-between;gap:4px}
     .engine-title{
       margin:0;
       font-size:12px;
       color:var(--muted);
       font-weight:700;
       line-height:1.2;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      flex:1;
     }
-    .level-row{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap}
+    .level-row{font-size:12px;font-weight:800;color:var(--text)}
 
     button{
       cursor:pointer;
@@ -356,7 +351,6 @@ function buildUI(){
     card.addEventListener("pointerenter",()=>applyHighlight(engine.id));
     card.addEventListener("pointerleave",clearHighlight);
 
-    const headRow=document.createElement("div"); headRow.className="engine-head";
     const title=document.createElement("h3"); title.className="engine-title";
     const levelRow=document.createElement("div"); levelRow.className="level-row";
 
@@ -387,9 +381,8 @@ function buildUI(){
       if(highlightedIds.has(engine.id)) applyHighlight(engine.id);
     });
 
-    headRow.appendChild(title);
-    headRow.appendChild(levelRow);
-    card.appendChild(headRow);
+    card.appendChild(title);
+    card.appendChild(levelRow);
     card.appendChild(mainBtn);
     card.appendChild(actionBtn);
     gridEl.appendChild(card);
