@@ -32,11 +32,7 @@
     .label{font-size:12px;color:var(--muted);text-transform:uppercase}
     .value{font-size:26px;font-weight:700;margin-top:6px}
 
-    .target-text{position:absolute;right:16px;top:14px;font-size:12px;color:var(--muted);font-weight:600}
-    .time-final{color:var(--green);}
-
-    .progress-wrap{position:absolute;left:0;right:0;bottom:0;height:10px;background:rgba(255,255,255,0.06)}
-    .progress-bar{height:100%;width:0%;background:rgba(35,209,139,0.65)}
+    .power-final{color:var(--green);}
 
     .time-finished{position:absolute;right:16px;top:14px;font-size:12px;font-weight:900;color:var(--green)}
 
@@ -117,17 +113,15 @@
     <div class="stat" id="powerStat">
       <div class="label">Current power</div>
       <div class="value" id="powerValue">0</div>
-      <div class="target-text">Target: 100000</div>
-      <div class="progress-wrap" aria-hidden="true"><div class="progress-bar" id="powerProgress"></div></div>
     </div>
     <div class="stat">
       <div class="label">Power gain / second</div>
       <div class="value" id="ppsValue">0</div>
     </div>
     <div class="stat" id="timeStat">
-      <div class="label">Time spent</div>
-      <div class="value" id="timeValue">0 min 0.0 s</div>
-      <div class="time-finished" id="finishedBadge" style="display:none;">Finished!</div>
+      <div class="label">Time left</div>
+      <div class="value" id="timeValue">5 min 0.0 s</div>
+      <div class="time-finished" id="finishedBadge" style="display:none;">Time up!</div>
     </div>
   </header>
 
@@ -140,7 +134,7 @@
 
 <script>
 // --- Game state ---
-const GOAL_POWER = 100000;
+const GAME_DURATION_MS = 5 * 60 * 1000;
 let power = 0;
 let gameStarted = false;
 let running = false;
@@ -213,7 +207,6 @@ const powerValueEl = document.getElementById("powerValue");
 const ppsValueEl = document.getElementById("ppsValue");
 const timeValueEl = document.getElementById("timeValue");
 const finishedBadgeEl = document.getElementById("finishedBadge");
-const progressEl = document.getElementById("powerProgress");
 
 const gridEl = document.getElementById("engineGrid");
 const treeWrapEl = document.getElementById("treeWrap");
@@ -298,7 +291,7 @@ function buildUI(){
       if(!canManualClick(engine)) return;
       const g=clickGainFor(engine);
       if(g>0){ gain(g); }
-      checkWin();
+      checkTimeUp();
       fastHUD();
     });
 
@@ -312,7 +305,7 @@ function buildUI(){
       if(!canPerformAction(engine)) return;
       if(!engine.automated){ spend(automateCostFor(engine)); engine.automated=true; engine.rate=initialRateFor(engine); engine.level++; }
       else{ spend(upgradeCostFor(engine)); engine.upgradesBought++; engine.rate+=upgradeDeltaFor(engine); engine.level++; }
-      checkWin();
+      checkTimeUp();
       refreshUI();
       scheduleUpdateLinePositions();
       if(highlightedIds.has(engine.id)) applyHighlight(engine.id);
@@ -328,7 +321,7 @@ function buildUI(){
   });
 }
 
-function formatElapsed(ms){
+function formatRemaining(ms){
   const totalSeconds = ms / 1000;
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds - minutes*60;
@@ -344,28 +337,24 @@ function getElapsedMs(nowTs){
   return Math.max(0, nowTs - startTs);
 }
 
-function updateProgress(){
-  const ratio = Math.max(0, Math.min(1, power / GOAL_POWER));
-  progressEl.style.width = `${(ratio*100).toFixed(2)}%`;
+function getRemainingMs(nowTs){
+  return Math.max(0, GAME_DURATION_MS - getElapsedMs(nowTs));
 }
 
 function fastHUD(){
   powerValueEl.textContent = formatInt(power);
   ppsValueEl.textContent = formatInt(totalPPS());
-  updateProgress();
 }
 
 function refreshUI(nowTs = performance.now()){
   powerValueEl.textContent = formatInt(power);
   ppsValueEl.textContent = gameStarted ? formatInt(totalPPS()) : "0";
 
-  const elapsedMs = getElapsedMs(nowTs);
-  timeValueEl.textContent = formatElapsed(elapsedMs);
-  timeValueEl.classList.toggle("time-final", finished);
+  const remainingMs = getRemainingMs(nowTs);
+  timeValueEl.textContent = formatRemaining(remainingMs);
+  powerValueEl.classList.toggle("power-final", finished);
 
   finishedBadgeEl.style.display = finished ? "block" : "none";
-
-  updateProgress();
 
   engines.forEach(engine=>{
     const els=engineEls[engine.id];
@@ -411,12 +400,11 @@ function refreshUI(nowTs = performance.now()){
   }
 }
 
-function checkWin(){
+function checkTimeUp(nowTs = performance.now()){
   if(finished) return;
-  if(power >= GOAL_POWER){
-    const now = performance.now();
-    // IMPORTANT: compute elapsed BEFORE setting finished=true (getElapsedMs() returns cached value when finished)
-    finishedElapsedMs = startTs == null ? 0 : Math.max(0, now - startTs);
+  if(getElapsedMs(nowTs) >= GAME_DURATION_MS){
+    const now = nowTs;
+    finishedElapsedMs = GAME_DURATION_MS;
 
     finished = true;
     running = false;
@@ -569,7 +557,7 @@ function tick(ts){
   if (running && !finished) {
     const pps = totalPPS();
     if (pps > 0 && dt > 0) gain(pps * dt);
-    checkWin();
+    checkTimeUp(ts);
   }
 
   if (ts - lastUiTs > 50) {
@@ -579,7 +567,7 @@ function tick(ts){
     // Fast HUD only
     powerValueEl.textContent = formatInt(power);
     ppsValueEl.textContent = gameStarted ? formatInt(totalPPS()) : "0";
-    updateProgress();
+    timeValueEl.textContent = formatRemaining(getRemainingMs(ts));
   }
 
   requestAnimationFrame(tick);
