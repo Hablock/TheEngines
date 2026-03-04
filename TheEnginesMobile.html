@@ -43,7 +43,16 @@
     .game-title{font-size:clamp(18px,4.6vw,24px);font-weight:900;letter-spacing:0.2px}
     .top-actions{display:flex;align-items:center;gap:8px}
 
-    header.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+    header.stats{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:6px;
+      position:sticky;
+      top:56px;
+      z-index:2;
+      padding:4px 0;
+      background:linear-gradient(180deg,rgba(11,15,25,0.96),rgba(11,15,25,0.86));
+    }
     .stat{
       background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);
       border:1px solid var(--border);
