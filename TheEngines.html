@@ -63,6 +63,8 @@
     .display-only{background:rgba(255,255,255,0.10);border:none;border-radius:0;color:rgba(231,234,240,0.85);cursor:default}
     .display-only:hover{background:rgba(255,255,255,0.10)}
     .display-only:active{transform:none}
+    .producing{background:#000 !important}
+    .producing:hover{background:#000 !important}
     .primary:hover{background:rgba(122,162,255,0.16)}
 
     .sub{font-size:12px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px}
@@ -477,13 +479,15 @@ function refreshUI(nowTs = performance.now()){
     const els = engineEls[engine.id];
     els.titleEl.textContent = `${rows[engine.rowIndex].label} - ⚙️ Engine ${engine.colIndex + 1}`;
     els.levelEl.textContent = `Level ${engine.level}`;
-    els.mainBtn.classList.remove("display-only");
+    els.mainBtn.classList.remove("display-only","producing");
 
     if(engine.rowIndex > 0){
       els.mainBtn.classList.add("display-only");
       els.mainBtn.textContent = engine.automated ? `${engine.rate}/s` : "Waiting";
+      if(engine.automated) els.mainBtn.classList.add("producing");
     } else if(engine.automated){
       els.mainBtn.textContent = `Click + ${engine.rate}/s`;
+      els.mainBtn.classList.add("producing");
     } else if(!gameStarted){
       els.mainBtn.textContent = "Waiting";
     } else {
