@@ -16,8 +16,6 @@
       --green:#23d18b;
       --yellow:#ffd400;
       --red:#ff4d4d;
-
-      --goal:100000;
     }
 
     *{box-sizing:border-box}
@@ -26,12 +24,12 @@
 
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
     .game-title{font-size:18px;font-weight:800;letter-spacing:0.2px}
+    .top-actions{display:flex;align-items:center;gap:8px}
 
     header.stats{display:flex;gap:12px;flex-wrap:wrap}
     .stat{flex:1 1 260px;background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);border:1px solid var(--border);border-radius:14px;padding:14px 16px;min-height:72px;position:relative;overflow:hidden}
     .label{font-size:12px;color:var(--muted);text-transform:uppercase}
     .value{font-size:26px;font-weight:700;margin-top:6px}
-
     .power-final{color:var(--green);}
 
     .time-finished{position:absolute;right:16px;top:14px;font-size:12px;font-weight:900;color:var(--green)}
@@ -62,23 +60,9 @@
     button:disabled{cursor:not-allowed;opacity:.65}
 
     .primary{background:rgba(122,162,255,0.12);border-color:rgba(122,162,255,0.35)}
-
-    .passive{
-      background:transparent;
-      border:1px dashed rgba(255,255,255,0.15);
-      color:var(--muted);
-      cursor:default;
-    }
-    .passive:hover{background:transparent;}
-    .display-only{
-      background:rgba(255,255,255,0.10);
-      border:none;
-      border-radius:0;
-      color:rgba(231,234,240,0.85);
-      cursor:default;
-    }
-    .display-only:hover{background:rgba(255,255,255,0.10);}
-    .display-only:active{transform:none;}
+    .display-only{background:rgba(255,255,255,0.10);border:none;border-radius:0;color:rgba(231,234,240,0.85);cursor:default}
+    .display-only:hover{background:rgba(255,255,255,0.10)}
+    .display-only:active{transform:none}
     .primary:hover{background:rgba(122,162,255,0.16)}
 
     .sub{font-size:12px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px}
@@ -89,24 +73,31 @@
     .state-yellow{border-color:rgba(255,212,0,0.60);background:rgba(255,212,0,0.08)}
     .state-red{border-color:rgba(255,77,77,0.60);background:rgba(255,77,77,0.08)}
 
-    .footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap}
-    .stop{background:rgba(255,77,77,0.10);border-color:rgba(255,77,77,0.35)}
-
-    .running-pill{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--muted)}
-    .running-pill.on{color:var(--green);border-color:rgba(35,209,139,0.35)}
-    .running-pill.off{color:var(--red);border-color:rgba(255,77,77,0.35)}
-
     .start{background:rgba(35,209,139,0.85);border-color:rgba(35,209,139,1);color:#0b1a12;font-weight:800}
     .start:hover{background:rgba(35,209,139,1)}
     .start.running{background:rgba(35,209,139,0.35);border-color:rgba(35,209,139,0.6);color:var(--text)}
     .start:hover{background:rgba(35,209,139,0.14)}
+    .settings-btn{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.25)}
+
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.58);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
+    .overlay.open{display:flex}
+    .settings-panel{width:min(460px,100%);background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+    .settings-title{font-size:18px;font-weight:800}
+    .settings-grid{display:grid;grid-template-columns:1fr;gap:10px}
+    .settings-field{display:flex;flex-direction:column;gap:6px}
+    .settings-field label{font-size:12px;color:var(--muted)}
+    .settings-field input{background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px}
+    .settings-actions{display:flex;gap:8px;flex-wrap:wrap}
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
     <div class="game-title">The Engines</div>
-    <button class="start" id="startBtn">Start</button>
+    <div class="top-actions">
+      <button class="settings-btn" id="settingsBtn">Settings</button>
+      <button class="start" id="startBtn">Start</button>
+    </div>
   </div>
 
   <header class="stats">
@@ -130,11 +121,36 @@
     <section class="grid" id="engineGrid"></section>
   </div>
 
+  <div class="overlay" id="settingsOverlay">
+    <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-title" id="settingsTitle">Game Settings</div>
+      <div class="settings-grid">
+        <div class="settings-field">
+          <label for="rowsInput">Rows</label>
+          <input id="rowsInput" type="number" min="1" max="8" step="1" />
+        </div>
+        <div class="settings-field">
+          <label for="enginesInput">Engines per row</label>
+          <input id="enginesInput" type="number" min="1" max="10" step="1" />
+        </div>
+        <div class="settings-field">
+          <label for="timerInput">Timer (minutes)</label>
+          <input id="timerInput" type="number" min="1" max="60" step="1" />
+        </div>
+      </div>
+      <div class="settings-actions">
+        <button class="start" id="saveSettingsBtn">Save changes</button>
+        <button id="resetSettingsBtn">Reset defaults</button>
+        <button id="closeSettingsBtn">Close</button>
+      </div>
+    </div>
   </div>
+</div>
 
 <script>
-// --- Game state ---
-const GAME_DURATION_MS = 5 * 60 * 1000;
+const DEFAULT_SETTINGS = { rows: 3, enginesPerRow: 5, timerMinutes: 5 };
+let settings = { ...DEFAULT_SETTINGS };
+
 let power = 0;
 let gameStarted = false;
 let running = false;
@@ -142,66 +158,31 @@ let finished = false;
 let startTs = null;
 let finishedElapsedMs = 0;
 
-const ENGINES_PER_ROW = 5;
-const ROWS = [
-  { label: "Row 1", costOffset: 0, rewardOffset: 0 },
-  { label: "Row 2", costOffset: 10, rewardOffset: 10 },
-  { label: "Row 3", costOffset: 100, rewardOffset: 100 },
-];
+let rows = [];
+let engines = [];
+let engineEls = [];
 
 const CLICK_GAIN_BASE = 1;
 const AUTOMATE_COST_BASE = 20;
-const FIRST_UPGRADE_COST_BASE = 30;
-const UPGRADE_COST_STEP_BASE = 10;
 
-const engines = ROWS.flatMap((row, rowIndex) =>
-  Array.from({ length: ENGINES_PER_ROW }, (_, colIndex) => ({
-    id: rowIndex * ENGINES_PER_ROW + colIndex,
-    rowIndex,
-    colIndex,
-    automated: false,
-    rate: 0,
-    upgradesBought: 0,
-    level: 1,
-  }))
-);
-
-// Tech tree
 const parentsById = {};
 const childrenById = {};
-function randInt(maxExclusive) { return Math.floor(Math.random() * maxExclusive); }
-function pickTwoDistinct(indices) {
-  const a = indices[randInt(indices.length)];
-  let b = indices[randInt(indices.length)];
-  while (b === a) b = indices[randInt(indices.length)];
-  return [a, b];
-}
-function initConnections() {
-  for (const k of Object.keys(parentsById)) delete parentsById[k];
-  for (const k of Object.keys(childrenById)) delete childrenById[k];
+let highlightedIds = new Set();
+let highlightedColor = null;
+let allLineEls = [];
+let edges = [];
+let lineByKey = new Map();
+let updateLinesQueued = false;
 
-  const row1Ids = engines.filter(e => e.rowIndex === 0).map(e => e.id);
-  engines.filter(e => e.rowIndex === 1).forEach(child => {
-    parentsById[child.id] = pickTwoDistinct(row1Ids);
-  });
-
-  const row2Ids = engines.filter(e => e.rowIndex === 1).map(e => e.id);
-  engines.filter(e => e.rowIndex === 2).forEach(child => {
-    parentsById[child.id] = pickTwoDistinct(row2Ids);
-  });
-
-  Object.keys(parentsById).forEach(cid => {
-    parentsById[cid].forEach(pid => {
-      if (!childrenById[pid]) childrenById[pid] = [];
-      childrenById[pid].push(Number(cid));
-    });
-  });
-}
-
-// DOM
 const startBtn = document.getElementById("startBtn");
-// Stop button removed
-// Running pill removed
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsOverlay = document.getElementById("settingsOverlay");
+const rowsInput = document.getElementById("rowsInput");
+const enginesInput = document.getElementById("enginesInput");
+const timerInput = document.getElementById("timerInput");
+const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+const resetSettingsBtn = document.getElementById("resetSettingsBtn");
+const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 
 const powerValueEl = document.getElementById("powerValue");
 const ppsValueEl = document.getElementById("ppsValue");
@@ -217,19 +198,42 @@ function gain(a){ power += a; }
 function spend(c){ power = Math.max(0, power - c); }
 function canAfford(c){ return power >= c; }
 function canManualClick(e){ return e.rowIndex === 0; }
-function clickGainFor(e){ return canManualClick(e) ? CLICK_GAIN_BASE + ROWS[e.rowIndex].rewardOffset : 0; }
-function automateCostFor(e){ if(e.rowIndex===1) return 200; if(e.rowIndex===2) return 2000; return AUTOMATE_COST_BASE + ROWS[e.rowIndex].costOffset; }
-function upgradeCostFor(e){
-  if(e.rowIndex===1) return 200 + (e.upgradesBought+1)*100;
-  if(e.rowIndex===2) return 2000 + (e.upgradesBought+1)*1000;
-  return FIRST_UPGRADE_COST_BASE + ROWS[e.rowIndex].costOffset + e.upgradesBought*(UPGRADE_COST_STEP_BASE + ROWS[e.rowIndex].costOffset);
+function gameDurationMs(){ return settings.timerMinutes * 60 * 1000; }
+function rowScale(rowIndex){ return Math.pow(10, rowIndex); }
+
+function generateRows(count){
+  return Array.from({ length: count }, (_, i) => ({
+    label: `Row ${i + 1}`,
+  }));
 }
-function initialRateFor(e){ return 1 + ROWS[e.rowIndex].rewardOffset; }
-function upgradeDeltaFor(e){ return 1 + ROWS[e.rowIndex].rewardOffset; }
-function totalPPS(){ return engines.reduce((s,e)=>s+(e.automated?e.rate:0),0); }
-function getParents(e){ return (parentsById[e.id]||[]).map(pid=>engines[pid]); }
-function minParentLevel(e){ const p=getParents(e); return p.length?Math.min(...p.map(x=>x.level)):Infinity; }
-function parentsAllowNextLevel(e){ const p=getParents(e); if(!p.length) return true; return minParentLevel(e)>=e.level+1; }
+
+function buildEngineModel(){
+  rows = generateRows(settings.rows);
+  engines = rows.flatMap((row, rowIndex) =>
+    Array.from({ length: settings.enginesPerRow }, (_, colIndex) => ({
+      id: rowIndex * settings.enginesPerRow + colIndex,
+      rowIndex,
+      colIndex,
+      automated: false,
+      rate: 0,
+      upgradesBought: 0,
+      level: 1,
+    }))
+  );
+  engineEls = engines.map(() => ({ levelEl:null, mainBtn:null, actionBtn:null, labelEl:null, costEl:null, titleEl:null, cardEl:null }));
+}
+
+function clickGainFor(e){ return canManualClick(e) ? CLICK_GAIN_BASE : 0; }
+function automateCostFor(e){ return AUTOMATE_COST_BASE * rowScale(e.rowIndex); }
+function upgradeCostFor(e){ return automateCostFor(e) + (e.upgradesBought + 1) * (10 * rowScale(e.rowIndex)); }
+function baseRateFor(e){ return rowScale(e.rowIndex); }
+function initialRateFor(e){ return baseRateFor(e); }
+function upgradeDeltaFor(e){ return baseRateFor(e); }
+function totalPPS(){ return engines.reduce((s, e) => s + (e.automated ? e.rate : 0), 0); }
+
+function getParents(e){ return (parentsById[e.id] || []).map(pid => engines[pid]); }
+function minParentLevel(e){ const p = getParents(e); return p.length ? Math.min(...p.map(x => x.level)) : Infinity; }
+function parentsAllowNextLevel(e){ const p = getParents(e); if(!p.length) return true; return minParentLevel(e) >= e.level + 1; }
 
 function actionStatus(e){
   const cost = e.automated ? upgradeCostFor(e) : automateCostFor(e);
@@ -240,71 +244,139 @@ function actionStatus(e){
   return "red";
 }
 
-function canPerformAction(e){ return gameStarted && running && !finished && actionStatus(e)==="green"; }
+function canPerformAction(e){ return gameStarted && running && !finished && actionStatus(e) === "green"; }
 
-function ancestorsOf(id){ const s=new Set(),stack=[id]; while(stack.length){const c=stack.pop();(parentsById[c]||[]).forEach(p=>{if(!s.has(p)){s.add(p);stack.push(p);}});} return s; }
-function descendantsOf(id){ const s=new Set(),stack=[id]; while(stack.length){const c=stack.pop();(childrenById[c]||[]).forEach(ch=>{if(!s.has(ch)){s.add(ch);stack.push(ch);}});} return s; }
-function highlightSetFor(id){ const set=new Set([id]); ancestorsOf(id).forEach(x=>set.add(x)); descendantsOf(id).forEach(x=>set.add(x)); return set; }
+function randInt(maxExclusive){ return Math.floor(Math.random() * maxExclusive); }
+function pickTwoDistinct(indices){
+  if(indices.length < 2) return indices.slice();
+  const a = indices[randInt(indices.length)];
+  let b = indices[randInt(indices.length)];
+  while(b === a) b = indices[randInt(indices.length)];
+  return [a, b];
+}
 
-let highlightedIds=new Set();
-let highlightedColor=null;
-let allLineEls=[];
+function initConnections(){
+  for(const k of Object.keys(parentsById)) delete parentsById[k];
+  for(const k of Object.keys(childrenById)) delete childrenById[k];
+  for(let rowIndex = 1; rowIndex < settings.rows; rowIndex++){
+    const parentIds = engines.filter(e => e.rowIndex === rowIndex - 1).map(e => e.id);
+    const children = engines.filter(e => e.rowIndex === rowIndex);
+    children.forEach(child => { parentsById[child.id] = pickTwoDistinct(parentIds); });
+  }
+  Object.keys(parentsById).forEach(cid => {
+    parentsById[cid].forEach(pid => {
+      if(!childrenById[pid]) childrenById[pid] = [];
+      childrenById[pid].push(Number(cid));
+    });
+  });
+}
 
-const engineEls=engines.map(()=>({levelEl:null,mainBtn:null,actionBtn:null,labelEl:null,costEl:null,titleEl:null,cardEl:null}));
+function ancestorsOf(id){
+  const s = new Set();
+  const stack = [id];
+  while(stack.length){
+    const c = stack.pop();
+    (parentsById[c] || []).forEach(p => {
+      if(!s.has(p)){ s.add(p); stack.push(p); }
+    });
+  }
+  return s;
+}
+
+function descendantsOf(id){
+  const s = new Set();
+  const stack = [id];
+  while(stack.length){
+    const c = stack.pop();
+    (childrenById[c] || []).forEach(ch => {
+      if(!s.has(ch)){ s.add(ch); stack.push(ch); }
+    });
+  }
+  return s;
+}
+
+function highlightSetFor(id){
+  const set = new Set([id]);
+  ancestorsOf(id).forEach(x => set.add(x));
+  descendantsOf(id).forEach(x => set.add(x));
+  return set;
+}
 
 function clearHighlight(){
-  highlightedIds.forEach(id=>engineEls[id]?.cardEl.classList.remove("hl-green","hl-yellow","hl-red"));
-  allLineEls.forEach(l=>l.classList.remove("hl-green","hl-yellow","hl-red"));
-  highlightedIds=new Set(); highlightedColor=null;
+  highlightedIds.forEach(id => engineEls[id]?.cardEl.classList.remove("hl-green","hl-yellow","hl-red"));
+  allLineEls.forEach(l => l.classList.remove("hl-green","hl-yellow","hl-red"));
+  highlightedIds = new Set();
+  highlightedColor = null;
 }
 
 function applyHighlight(id){
-  const set=highlightSetFor(id);
-  const color=actionStatus(engines[id]);
-  engines.forEach(e=>{
-    const card=engineEls[e.id].cardEl;
+  const set = highlightSetFor(id);
+  const color = actionStatus(engines[id]);
+  engines.forEach(e => {
+    const card = engineEls[e.id].cardEl;
     card.classList.remove("hl-green","hl-yellow","hl-red");
     if(set.has(e.id)) card.classList.add(`hl-${color}`);
   });
-  allLineEls.forEach(l=>{
+  allLineEls.forEach(l => {
     l.classList.remove("hl-green","hl-yellow","hl-red");
-    const p=Number(l.dataset.parentId),c=Number(l.dataset.childId);
-    if(set.has(p)&&set.has(c)) l.classList.add(`hl-${color}`);
+    const p = Number(l.dataset.parentId);
+    const c = Number(l.dataset.childId);
+    if(set.has(p) && set.has(c)) l.classList.add(`hl-${color}`);
   });
-  highlightedIds=set; highlightedColor=color;
+  highlightedIds = set;
+  highlightedColor = color;
+}
+
+function applyGridColumns(){
+  gridEl.style.gridTemplateColumns = `repeat(${settings.enginesPerRow}, minmax(160px,1fr))`;
 }
 
 function buildUI(){
-  gridEl.innerHTML="";
-  engines.forEach(engine=>{
-    const card=document.createElement("div"); card.className="engine";
-    card.addEventListener("pointerenter",()=>applyHighlight(engine.id));
-    card.addEventListener("pointerleave",clearHighlight);
+  applyGridColumns();
+  gridEl.innerHTML = "";
+  engines.forEach(engine => {
+    const card = document.createElement("div");
+    card.className = "engine";
+    card.addEventListener("pointerenter", () => applyHighlight(engine.id));
+    card.addEventListener("pointerleave", clearHighlight);
 
-    const title=document.createElement("h3");
-    const levelRow=document.createElement("div"); levelRow.className="level-row";
+    const title = document.createElement("h3");
+    const levelRow = document.createElement("div");
+    levelRow.className = "level-row";
 
-    const mainBtn=document.createElement("button"); mainBtn.className="primary";
-    mainBtn.addEventListener("pointerdown",ev=>{
+    const mainBtn = document.createElement("button");
+    mainBtn.className = "primary";
+    mainBtn.addEventListener("pointerdown", ev => {
       ev.preventDefault();
-      if(!gameStarted || !running || finished) return;
-      if(!canManualClick(engine)) return;
-      const g=clickGainFor(engine);
-      if(g>0){ gain(g); }
+      if(!gameStarted || !running || finished || !canManualClick(engine)) return;
+      const g = clickGainFor(engine);
+      if(g > 0) gain(g);
       checkTimeUp();
       fastHUD();
     });
 
-    const actionBtn=document.createElement("button"); actionBtn.className="sub";
-    const labelEl=document.createElement("span"); labelEl.className="btn-label";
-    const costEl=document.createElement("span"); costEl.className="cost";
-    actionBtn.appendChild(labelEl); actionBtn.appendChild(costEl);
-
-    actionBtn.addEventListener("pointerdown",ev=>{
+    const actionBtn = document.createElement("button");
+    actionBtn.className = "sub";
+    const labelEl = document.createElement("span");
+    labelEl.className = "btn-label";
+    const costEl = document.createElement("span");
+    costEl.className = "cost";
+    actionBtn.appendChild(labelEl);
+    actionBtn.appendChild(costEl);
+    actionBtn.addEventListener("pointerdown", ev => {
       ev.preventDefault();
       if(!canPerformAction(engine)) return;
-      if(!engine.automated){ spend(automateCostFor(engine)); engine.automated=true; engine.rate=initialRateFor(engine); engine.level++; }
-      else{ spend(upgradeCostFor(engine)); engine.upgradesBought++; engine.rate+=upgradeDeltaFor(engine); engine.level++; }
+      if(!engine.automated){
+        spend(automateCostFor(engine));
+        engine.automated = true;
+        engine.rate = initialRateFor(engine);
+        engine.level++;
+      } else {
+        spend(upgradeCostFor(engine));
+        engine.upgradesBought++;
+        engine.rate += upgradeDeltaFor(engine);
+        engine.level++;
+      }
       checkTimeUp();
       refreshUI();
       scheduleUpdateLinePositions();
@@ -317,14 +389,61 @@ function buildUI(){
     card.appendChild(actionBtn);
     gridEl.appendChild(card);
 
-    engineEls[engine.id]={levelEl:levelRow,mainBtn,actionBtn,labelEl,costEl,titleEl:title,cardEl:card};
+    engineEls[engine.id] = { levelEl: levelRow, mainBtn, actionBtn, labelEl, costEl, titleEl: title, cardEl: card };
+  });
+}
+
+function rebuildLines(){
+  treeSvgEl.innerHTML = "";
+  lineByKey = new Map();
+  allLineEls = [];
+  edges = [];
+  engines.forEach(child => {
+    (parentsById[child.id] || []).forEach(pid => edges.push({ p: pid, c: child.id }));
+  });
+  edges.forEach(({ p, c }) => {
+    const key = `${p}->${c}`;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.classList.add("tree-line");
+    line.dataset.parentId = String(p);
+    line.dataset.childId = String(c);
+    line.setAttribute("stroke", "rgba(122,162,255,0.45)");
+    line.setAttribute("stroke-width", "2");
+    line.setAttribute("stroke-linecap", "round");
+    treeSvgEl.appendChild(line);
+    lineByKey.set(key, line);
+  });
+  allLineEls = Array.from(lineByKey.values());
+}
+
+function updateLinePositions(){
+  const wrapRect = treeWrapEl.getBoundingClientRect();
+  treeSvgEl.setAttribute("viewBox", `0 0 ${wrapRect.width} ${wrapRect.height}`);
+  edges.forEach(({ p, c }) => {
+    const pRect = engineEls[p].cardEl.getBoundingClientRect();
+    const cRect = engineEls[c].cardEl.getBoundingClientRect();
+    const line = lineByKey.get(`${p}->${c}`);
+    if(!line) return;
+    line.setAttribute("x1", (pRect.left - wrapRect.left) + pRect.width / 2);
+    line.setAttribute("y1", (pRect.top - wrapRect.top) + pRect.height);
+    line.setAttribute("x2", (cRect.left - wrapRect.left) + cRect.width / 2);
+    line.setAttribute("y2", (cRect.top - wrapRect.top));
+  });
+}
+
+function scheduleUpdateLinePositions(){
+  if(updateLinesQueued) return;
+  updateLinesQueued = true;
+  requestAnimationFrame(() => {
+    updateLinesQueued = false;
+    updateLinePositions();
   });
 }
 
 function formatRemaining(ms){
   const totalSeconds = ms / 1000;
   const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds - minutes*60;
+  const seconds = totalSeconds - minutes * 60;
   const secInt = Math.floor(seconds);
   const tenths = Math.floor((seconds - secInt) * 10);
   return `${minutes} min ${secInt}.${tenths} s`;
@@ -338,31 +457,28 @@ function getElapsedMs(nowTs){
 }
 
 function getRemainingMs(nowTs){
-  return Math.max(0, GAME_DURATION_MS - getElapsedMs(nowTs));
+  return Math.max(0, gameDurationMs() - getElapsedMs(nowTs));
 }
 
 function fastHUD(){
   powerValueEl.textContent = formatInt(power);
-  ppsValueEl.textContent = formatInt(totalPPS());
+  ppsValueEl.textContent = gameStarted ? formatInt(totalPPS()) : "0";
 }
 
 function refreshUI(nowTs = performance.now()){
   powerValueEl.textContent = formatInt(power);
   ppsValueEl.textContent = gameStarted ? formatInt(totalPPS()) : "0";
-
-  const remainingMs = getRemainingMs(nowTs);
-  timeValueEl.textContent = formatRemaining(remainingMs);
+  timeValueEl.textContent = formatRemaining(getRemainingMs(nowTs));
   powerValueEl.classList.toggle("power-final", finished);
-
   finishedBadgeEl.style.display = finished ? "block" : "none";
+  settingsBtn.disabled = running;
 
-  engines.forEach(engine=>{
-    const els=engineEls[engine.id];
-    els.titleEl.textContent=`${ROWS[engine.rowIndex].label} - ⚙️ Engine ${engine.colIndex+1}`;
-    els.levelEl.textContent=`Level ${engine.level}`;
-    els.mainBtn.classList.remove("passive","display-only");
+  engines.forEach(engine => {
+    const els = engineEls[engine.id];
+    els.titleEl.textContent = `${rows[engine.rowIndex].label} - ⚙️ Engine ${engine.colIndex + 1}`;
+    els.levelEl.textContent = `Level ${engine.level}`;
+    els.mainBtn.classList.remove("display-only");
 
-    // Keep current behavior for main button content (not part of header)
     if(engine.rowIndex > 0){
       els.mainBtn.classList.add("display-only");
       els.mainBtn.textContent = engine.automated ? `${engine.rate}/s` : "Waiting";
@@ -375,19 +491,16 @@ function refreshUI(nowTs = performance.now()){
     }
     els.mainBtn.disabled = !gameStarted || !running || finished || !canManualClick(engine);
 
-    const label=engine.automated?"Upgrade":"Automate";
-    const cost=engine.automated?upgradeCostFor(engine):automateCostFor(engine);
-    els.labelEl.textContent=label;
-    els.costEl.textContent=`Cost: ${cost}`;
+    const cost = engine.automated ? upgradeCostFor(engine) : automateCostFor(engine);
+    els.labelEl.textContent = engine.automated ? "Upgrade" : "Automate";
+    els.costEl.textContent = `Cost: ${cost}`;
 
     els.actionBtn.classList.remove("state-green","state-yellow","state-red");
-    const st=actionStatus(engine);
+    const st = actionStatus(engine);
     els.actionBtn.classList.add(`state-${st}`);
-    els.actionBtn.disabled = !gameStarted || !running || finished || st!=="green";
+    els.actionBtn.disabled = !gameStarted || !running || finished || st !== "green";
   });
 
-  // Start button UI
-  startBtn.disabled = false;
   if(!gameStarted){
     startBtn.textContent = "Start";
     startBtn.classList.remove("running");
@@ -402,14 +515,11 @@ function refreshUI(nowTs = performance.now()){
 
 function checkTimeUp(nowTs = performance.now()){
   if(finished) return;
-  if(getElapsedMs(nowTs) >= GAME_DURATION_MS){
-    const now = nowTs;
-    finishedElapsedMs = GAME_DURATION_MS;
-
+  if(getElapsedMs(nowTs) >= gameDurationMs()){
+    finishedElapsedMs = gameDurationMs();
     finished = true;
     running = false;
-
-    refreshUI(now);
+    refreshUI(nowTs);
   }
 }
 
@@ -420,106 +530,84 @@ function resetGame(){
   finished = false;
   startTs = null;
   finishedElapsedMs = 0;
-
-  // Reset engines
-  engines.forEach((e) => {
+  engines.forEach(e => {
     e.automated = false;
     e.rate = 0;
     e.upgradesBought = 0;
     e.level = 1;
   });
-
-  // New random tech tree
   initConnections();
-
-  // Rebuild lines (connections changed)
-  edges = [];
-  lineByKey.forEach((el) => el.remove());
-  lineByKey = new Map();
-  allLineEls = [];
-  buildLines();
-
+  rebuildLines();
   clearHighlight();
   refreshUI(performance.now());
   scheduleUpdateLinePositions();
 }
 
-// --- Tech tree line rendering (no DOM churn) --- (no DOM churn) ---
-let edges = [];
-let lineByKey = new Map();
-let updateLinesQueued = false;
-
-function buildLines() {
-  edges = [];
-  engines.forEach((child) => {
-    (parentsById[child.id] || []).forEach((pid) => edges.push({ p: pid, c: child.id }));
-  });
-
-  edges.forEach(({ p, c }) => {
-    const key = `${p}->${c}`;
-    if (lineByKey.has(key)) return;
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.classList.add("tree-line");
-    line.dataset.parentId = String(p);
-    line.dataset.childId = String(c);
-    line.setAttribute("stroke", "rgba(122,162,255,0.45)");
-    line.setAttribute("stroke-width", "2");
-    line.setAttribute("stroke-linecap", "round");
-    treeSvgEl.appendChild(line);
-    lineByKey.set(key, line);
-  });
-
-  allLineEls = Array.from(lineByKey.values());
+function rebuildFromSettings(){
+  power = 0;
+  gameStarted = false;
+  running = false;
+  finished = false;
+  startTs = null;
+  finishedElapsedMs = 0;
+  clearHighlight();
+  buildEngineModel();
+  initConnections();
+  buildUI();
+  rebuildLines();
+  refreshUI(performance.now());
+  scheduleUpdateLinePositions();
 }
 
-function updateLinePositions() {
-  const wrapRect = treeWrapEl.getBoundingClientRect();
-  const w = wrapRect.width;
-  const h = wrapRect.height;
-  treeSvgEl.setAttribute("viewBox", `0 0 ${w} ${h}`);
-
-  edges.forEach(({ p, c }) => {
-    const pRect = engineEls[p].cardEl.getBoundingClientRect();
-    const cRect = engineEls[c].cardEl.getBoundingClientRect();
-
-    const x1 = (pRect.left - wrapRect.left) + pRect.width / 2;
-    const y1 = (pRect.top - wrapRect.top) + pRect.height;
-    const x2 = (cRect.left - wrapRect.left) + cRect.width / 2;
-    const y2 = (cRect.top - wrapRect.top);
-
-    const key = `${p}->${c}`;
-    const line = lineByKey.get(key);
-    if (!line) return;
-    line.setAttribute("x1", x1);
-    line.setAttribute("y1", y1);
-    line.setAttribute("x2", x2);
-    line.setAttribute("y2", y2);
-  });
-
-  if (highlightedIds.size && highlightedColor) {
-    allLineEls.forEach((l) => {
-      const p = Number(l.dataset.parentId);
-      const c = Number(l.dataset.childId);
-      l.classList.toggle(`hl-${highlightedColor}`, highlightedIds.has(p) && highlightedIds.has(c));
-    });
-  }
+function clampInt(raw, min, max, fallback){
+  const value = Number(raw);
+  if(!Number.isFinite(value)) return fallback;
+  return Math.max(min, Math.min(max, Math.floor(value)));
 }
 
-function scheduleUpdateLinePositions() {
-  if (updateLinesQueued) return;
-  updateLinesQueued = true;
-  requestAnimationFrame(() => {
-    updateLinesQueued = false;
-    updateLinePositions();
-  });
+function syncSettingsForm(){
+  rowsInput.value = String(settings.rows);
+  enginesInput.value = String(settings.enginesPerRow);
+  timerInput.value = String(settings.timerMinutes);
 }
 
-// Controls
+function openSettings(){
+  if(running) return;
+  syncSettingsForm();
+  settingsOverlay.classList.add("open");
+}
+
+function closeSettings(){ settingsOverlay.classList.remove("open"); }
+
+settingsBtn.addEventListener("pointerdown", (ev) => { ev.preventDefault(); openSettings(); });
+closeSettingsBtn.addEventListener("pointerdown", (ev) => { ev.preventDefault(); closeSettings(); });
+
+resetSettingsBtn.addEventListener("pointerdown", (ev) => {
+  ev.preventDefault();
+  settings = { ...DEFAULT_SETTINGS };
+  syncSettingsForm();
+  rebuildFromSettings();
+  closeSettings();
+});
+
+saveSettingsBtn.addEventListener("pointerdown", (ev) => {
+  ev.preventDefault();
+  settings = {
+    rows: clampInt(rowsInput.value, 1, 8, DEFAULT_SETTINGS.rows),
+    enginesPerRow: clampInt(enginesInput.value, 1, 10, DEFAULT_SETTINGS.enginesPerRow),
+    timerMinutes: clampInt(timerInput.value, 1, 60, DEFAULT_SETTINGS.timerMinutes),
+  };
+  rebuildFromSettings();
+  closeSettings();
+});
+
+settingsOverlay.addEventListener("pointerdown", (ev) => {
+  if(ev.target === settingsOverlay) closeSettings();
+});
+
 startBtn.addEventListener("pointerdown", (ev) => {
   ev.preventDefault();
-
-  // Start first game
-  if (!gameStarted) {
+  if(!gameStarted){
     gameStarted = true;
     running = true;
     finished = false;
@@ -529,9 +617,7 @@ startBtn.addEventListener("pointerdown", (ev) => {
     scheduleUpdateLinePositions();
     return;
   }
-
-  // After finishing, allow restart
-  if (finished) {
+  if(finished){
     resetGame();
     gameStarted = true;
     running = true;
@@ -543,28 +629,24 @@ startBtn.addEventListener("pointerdown", (ev) => {
   }
 });
 
-
-
 window.addEventListener("resize", scheduleUpdateLinePositions);
 
-// Loop
 let lastTs = performance.now();
 let lastUiTs = 0;
 function tick(ts){
   const dt = (ts - lastTs) / 1000;
   lastTs = ts;
 
-  if (running && !finished) {
+  if(running && !finished){
     const pps = totalPPS();
-    if (pps > 0 && dt > 0) gain(pps * dt);
+    if(pps > 0 && dt > 0) gain(pps * dt);
     checkTimeUp(ts);
   }
 
-  if (ts - lastUiTs > 50) {
+  if(ts - lastUiTs > 50){
     refreshUI(ts);
     lastUiTs = ts;
   } else {
-    // Fast HUD only
     powerValueEl.textContent = formatInt(power);
     ppsValueEl.textContent = gameStarted ? formatInt(totalPPS()) : "0";
     timeValueEl.textContent = formatRemaining(getRemainingMs(ts));
@@ -573,11 +655,11 @@ function tick(ts){
   requestAnimationFrame(tick);
 }
 
-// Init
+buildEngineModel();
 initConnections();
 buildUI();
+rebuildLines();
 refreshUI(performance.now());
-buildLines();
 scheduleUpdateLinePositions();
 requestAnimationFrame(tick);
 </script>
